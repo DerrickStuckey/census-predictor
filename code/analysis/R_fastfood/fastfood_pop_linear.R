@@ -20,7 +20,7 @@ merged_df <- merge(pop,ff_counts,by="zipCode",all.x=TRUE,all.y=FALSE)
 # set all missing values for fast food count to 0
 merged_df$ff_count[is.na(merged_df$ff_count)] <- 0
 
-# build linear model
-linear_fit <- lm(X2010pop ~ ff_count, data=merged_df)
+# build linear regression model
+lm_fit <- lm(X2010pop ~ ff_count, data=merged_df)
 
-summary(linear_fit)
+summary(lm_fit)
