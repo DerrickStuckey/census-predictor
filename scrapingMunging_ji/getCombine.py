@@ -260,11 +260,9 @@ def HospBeds():
     HospitalData = Data.parse(name[0], index_col = None, header = 7)
     for x in range(1,9):
         loc = 'Hospitals/hospitalfile' +str(x) +'.xls'
-        print loc
         Data2 = pd.ExcelFile(loc, header=7, index_col=None)
         names = Data2.sheet_names
         parsed = Data2.parse(names[0], index_col = None, header = 7)
-        print "length number ", str(x), len(parsed)    
         HospitalData = HospitalData.append(parsed)
         
     HospitalData.to_csv('Hospitals/CombinedHospitalData.csv')
@@ -272,7 +270,7 @@ def HospBeds():
 ##Part VIII: JOINING HOSPITAL BED DATA TO DATASET
 def HospJoin():
     import pandas as pd
-    CombinedData = pd.DataFrame.from_csv('C:/Users/Jillian/Documents/GWU/practicum/CombinedZipFile.csv')
+    CombinedData = pd.DataFrame.from_csv('CombinedZipFile.csv')
     
     #pulling a list of fips from the combined data set for indexing
     StateFips = CombinedData[["StateAbbr","stateCode"]]
@@ -296,7 +294,7 @@ def HospJoin():
     #indexing bed sums back into combined data set and saving it
     CombinedData2 = CombinedData.join(BedSums, how='left')
     
-    CombinedData2.to_csv('C:/Users/Jillian/Documents/GWU/practicum/CombinedZipFile.csv')
+    CombinedData2.to_csv('CombinedZipFile.csv')
 
 
 #running the functions (can skip functions pulling data to use versions on computer)
@@ -305,7 +303,7 @@ Census = GetCensusData(FIPS)
 GetSSdata()
 SSjoin = SS_CensusJoin(Census)
 GetIRSdata()
-IRSjoin = IRS_CensusJoin(SSjoin)
+IRS_CensusJoin(SSjoin)
 HospBeds()
 HospJoin()
 
