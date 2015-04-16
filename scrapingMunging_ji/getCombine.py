@@ -152,7 +152,8 @@ def SS_CensusJoin(PBZ2):
     SSbyZip2 = SSbyZip2.drop(['zipCode', 'names'], axis=1) 
     pop3 = PBZ2
     combined2010 = pop3.join(SSbyZip2, how='left')
-    combined2010.to_csv('/CombinedZipFile.csv')    
+    combined2010.to_pickle('zipSS.pk')
+    combined2010.to_csv('zipSS.csv')    
     return combined2010
 
 ##Part V: PULLING IRS TAX DATA   
@@ -188,7 +189,6 @@ def IRS_CensusJoin(COMB2010):
     IRSdf = IRSdf[IRSdf.IRS_rtrns != 0]
     IRSdf['fips'] = IRSdf.iloc[:,0]
     IRSdf['zipCode']=IRSdf.iloc[:,1]
-    print IRSdf
     #Getting rid of no-named columns
     IRSdf = IRSdf.iloc[:,[3,4,5]]
     #adding back in leading zeros to zips and fips codes
@@ -206,7 +206,8 @@ def IRS_CensusJoin(COMB2010):
     IRSdf2 = IRSdf2.iloc[:,0]
     
     combined2010 = COMB2010.join(IRSdf2, how='left')
-    combined2010.to_csv('CombinedZipFile.csv')
+    combined2010.to_csv('zipSS_IRS.csv')
+    combined2010.to_pickle('zipSS_IRS.pk')
     return combined2010
 
 ##Part VII: PULLING HOSPITAL BED DATA
@@ -253,7 +254,6 @@ def HospBeds():
             w.write(data)
         browser.find_element_by_link_text("Search").click()
         time.sleep(5)
-    
     #combining query data, removing dupes and pulling relevant columns
     Data = pd.ExcelFile('Hospitals/hospitalfile0.xls', header=7, index_col=None)
     name = Data.sheet_names
@@ -262,15 +262,16 @@ def HospBeds():
         loc = 'Hospitals/hospitalfile' +str(x) +'.xls'
         Data2 = pd.ExcelFile(loc, header=7, index_col=None)
         names = Data2.sheet_names
-        parsed = Data2.parse(names[0], index_col = None, header = 7)
+        parsed = Data2.parse(names[0], index_col = None, header = 7)   
         HospitalData = HospitalData.append(parsed)
         
     HospitalData.to_csv('Hospitals/CombinedHospitalData.csv')
+    HospitalData.to_pickle('Hospitals/CombinedHospitalData.pk')
 
 ##Part VIII: JOINING HOSPITAL BED DATA TO DATASET
 def HospJoin():
     import pandas as pd
-    CombinedData = pd.DataFrame.from_csv('CombinedZipFile.csv')
+    CombinedData  = pd.read_pickle('zipSS_IRS.pk')
     
     #pulling a list of fips from the combined data set for indexing
     StateFips = CombinedData[["StateAbbr","stateCode"]]
@@ -278,13 +279,11 @@ def HospJoin():
     StateFips = StateFips.drop_duplicates()
     
     #creating index field, getting sums of beds by zip+state combo
-    HospitalData = pd.DataFrame.from_csv('Hospitals/CombinedHospitalData.csv', header=0, index_col=None)
+    HospitalData = pd.read_pickle('Hospitals/CombinedHospitalData.pkl')
     HospitalData = HospitalData[["Beds","State","ZIP"]]
     HospitalData = HospitalData[(HospitalData['State'] != "MP") & (HospitalData['State'] != "GU") & (HospitalData['State'] != "VI")]
     HospitalData = HospitalData.set_index('State')
-    HospitalData2 = HospitalData.join(StateFips, how='left')
-    HospitalData2.stateCode = HospitalData2.stateCode.astype(int)
-    HospitalData2["stateCode"] =HospitalData2.stateCode.map("{:02}".format)    
+    HospitalData2 = HospitalData.join(StateFips, how='left')  
     HospitalData2["index"] =  "C" + HospitalData2.apply(lambda x:'%s%s' % (x['stateCode'],x['ZIP']),axis=1)
     HospitalData2 = HospitalData2[["Beds","index"]]
     HospitalData2.Beds = HospitalData2.Beds.astype(int)
@@ -293,10 +292,189 @@ def HospJoin():
     
     #indexing bed sums back into combined data set and saving it
     CombinedData2 = CombinedData.join(BedSums, how='left')
-    
     CombinedData2.to_csv('CombinedZipFile.csv')
+    CombinedData2.to_pickle('zipSS_IRS_Beds.pk')
 
+##Part IX: PULLING GAS STATION DATA
+def GetGasStations():
+    from bs4 import BeautifulSoup
+    import urllib2
+    import os
+    import pandas as pd
+    import time
+    
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    
+    CombinedData = pd.read_pickle('zipSS_IRS.pk')
+    zipCodes = CombinedData['zipCode']
+    zc = []
+    totalStations = []
+    
+    for zipCode in zipCodes:
+        BASE_URL = 'http://www.allgasstations.com/ZipCodes.php?zip='
+        url = BASE_URL + str(zipCode)
+        html = urllib2.urlopen(url).read()    
+        soup = BeautifulSoup(html)
+        try:    
+            stations = soup.find('td')
+            stations2 = stations.find_all('i')
+            totalStations.append(len(stations2))
+        except Exception:
+            stations.append(0)
+        zc.append(zipCode)
+        print "zip code + ", zipCode
+        print "stations = ", len(stations2)
+        time.sleep(2)
+    
+    d = {'zipCode': zc, 'gasStations': totalStations}
+    stations = pd.DataFrame(d)
+    stations.to_pickle('GasStations/stations.pk')
+    stations.to_csv('GasStations/stations.csv')
 
+##Part X: JOINING GAS STATION DATA TO MASTER SET
+def GasJoin():
+    import pandas as pd
+    #note: gas stations are by zip, across state where necessary (i.e., where a zip is in 2 states,
+    #the number repeats)    
+    CombinedData = pd.read_pickle('zipSS_IRS_Beds.pk')
+    CombinedData.zipCode= CombinedData.zipCode.astype(int)
+    CombinedData["zipCode"] =CombinedData.zipCode.map("{:05}".format)
+    stations = pd.read_pickle('GasStations/stations.pk')
+    stations2 = stations.drop_duplicates()
+    stations2 = stations2.set_index('zipCode')
+    CombinedData['index'] = CombinedData['zipCode']
+    CombinedZip = CombinedData.reset_index('index')
+    CombinedZip = CombinedZip.set_index('index')
+    Combined = CombinedZip.join(stations2, how='left')
+    Combined = Combined.set_index('CodeInd2')
+    Combined.to_csv('zipSS_IRS_Beds_Gas.csv')
+    Combined.to_pickle('zipSS_IRS_Beds_Gas.pk')
+
+##Part XI: GETTING FAST FOOD RESTAURANTS
+def GetFastFood():
+    import urllib
+    import zipfile
+    import shutil
+    import os
+    
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    fileUrl = 'http://www.fastfoodmaps.com/fastfoodmaps_locations_2007.csv.zip'
+    urllib.urlretrieve(fileUrl,"FastFood/FastFoodLoc_2007.zip")
+    #unzipping only needed file
+    my_dir = r"FastFood"
+    my_zip = r"FastFood/FastFoodLoc_2007.zip"
+    
+    with zipfile.ZipFile(my_zip) as zip_file:
+        filename = os.path.basename('fastfoodmaps_locations_2007.csv')
+        source = zip_file.open('fastfoodmaps_locations_2007.csv')
+        target = file(os.path.join(my_dir, filename), "wb")
+        with source, target:
+            shutil.copyfileobj(source, target)
+
+##Part XII: JOINING FAST FOOD DATA TO MASTER
+def FastFoodJoin():
+    import pandas as pd
+    #pulling in relevant columns and rows from IRS data and prep for join with master data
+    CombinedData  = pd.read_pickle('zipSS_IRS_Beds_Gas.pk')
+    #pulling a list of fips from the combined data set for indexing
+    StateFips = CombinedData[["StateAbbr","stateCode"]]
+    StateFips = StateFips.set_index('StateAbbr')
+    StateFips = StateFips.drop_duplicates()
+    
+    #prepping the fast food data and getting counts by zip code
+    fastfood = pd.DataFrame.from_csv("FastFood/fastfoodmaps_locations_2007.csv", header=None, index_col=1)
+    fastfood = fastfood.iloc[:,[4,5]]
+    fastfood.columns = ['state', 'zip']
+    fastfood = fastfood.set_index('state')
+    fastfood2 = fastfood.join(StateFips, how='left')  
+    fastfood2['zip'] = fastfood2['zip'].str[:5]
+    fastfood2.zip = fastfood2.zip.astype(int)
+    fastfood2['zip'] =fastfood2.zip.map("{:05}".format)
+    fastfood2["index"] =  "C" + fastfood2.apply(lambda x:'%s%s' % (x['stateCode'],x['zip']),axis=1)
+    ff_count= fastfood2.groupby('index', as_index=False).count()
+    ff_count = ff_count.iloc[:,[1]]
+    ff_count.columns = ['count_fastfood']
+    
+    #joining fast food data with combined table
+    comb_ff = CombinedData.join(ff_count, how='left')
+    comb_ff.to_csv('zipSS_IRS_Beds_Gas_FF.csv')
+    comb_ff.to_pickle('zipSS_IRS_Beds_Gas_FF.pk')
+
+##Part XIII: GETTING DATA ON NUMBER OF FCC REGISTERED ANTENNA STRUCTURES
+def GetTowers():
+    import os
+    from selenium import webdriver
+    import time
+    import pandas as pd
+    import re
+    
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    
+    ##NOTE: This code takes days to pull all the data
+    path_to_chromedriver = 'chromedriver_win32/chromedriver.exe' # change path as needed
+    browser = webdriver.Chrome(executable_path = path_to_chromedriver)
+    time.sleep(5)
+    browser.set_page_load_timeout(120)
+    print "pulling cell tower data"
+    url1 = 'http://wireless2.fcc.gov/UlsApp/AsrSearch/asrRegistrationSearch.jsp'
+    browser.get(url1)
+    time.sleep(5)
+    browser.set_script_timeout(30)
+    
+    #entering pulling zips from master data
+    CombinedData = pd.read_pickle('zipSS_IRS.pk')
+    zipList = CombinedData['zipCode']
+    ##making lists to hold the data   
+    zipCode = []
+    towers = []
+    
+    #entering search query
+    browser.find_element_by_xpath('/html/body/table[4]/tbody/tr/td[2]/div/table/tbody/tr/td[3]/form/div/table/tbody/tr[2]/td/table/tbody/tr[4]/td/input').click()
+    for x in zipList:
+        zipField = browser.find_element_by_xpath('/html/body/table[4]/tbody/tr/td[2]/div/table/tbody/tr/td[3]/form/div/table/tbody/tr[2]/td/table/tbody/tr[5]/td/table/tbody/tr[4]/td[2]/input[1]')   
+        zipField.clear() 
+        zipField.send_keys(x)    
+        #scraping total towers    
+        browser.find_element_by_xpath('/html/body/table[4]/tbody/tr/td[2]/div/table/tbody/tr/td[3]/form/div/table/tbody/tr[2]/td/table/tbody/tr[5]/td/table/tbody/tr[4]/td[2]/input[2]').click()
+        browser.implicitly_wait(20)
+        hits = browser.find_element_by_css_selector('td.cell-pri-light')
+        counthits = hits.text.encode('ascii', 'ignore')
+        tower = re.findall('Matches [0-9]+-[0-9]+ \(of ([0-9]+)',counthits)
+        zipCode.append(x)    
+        print x    
+        print tower
+        if tower != []:
+            towers.extend(tower)
+        else:
+            towers.append('0')
+        browser.back()
+        time.sleep(1)
+    #saving results as a data frame and csv
+    d = {'zipCode': zipCode, 'towers': towers}
+    towerDF = pd.DataFrame(d)
+    towerDF.to_pickle('CellTowers/cellTowers.pk')
+    towerDF.to_csv('CellTowers/cellTowers.csv')
+
+##Part XIV: JOINING ANTENNA RESULTS TO MASTER
+def TowersJoin():
+    import pandas as pd
+    #note: data is by zip, across state where necessary (i.e., where a zip is in 2 states,
+    #the number repeats)    
+    CombinedData = pd.read_pickle('zipSS_IRS_Beds_Gas_ff.pk')
+    towers = pd.DataFrame.from_csv('CellTowers/cellTowers_all.csv')
+    towers.zipCode= towers.zipCode.astype(int)
+    towers["zipCode"] =towers.zipCode.map("{:05}".format)
+    towers2 = towers.drop_duplicates()
+    towers2 = towers2.set_index('zipCode')
+    CombinedData['index'] = CombinedData['zipCode']
+    CombinedZip = CombinedData.reset_index('index')
+    CombinedZip = CombinedZip.set_index('index')
+    Combined = CombinedZip.join(towers2, how='left')
+    Combined = Combined.rename(columns={'level_0': 'CodeInd2'})
+    Combined = Combined.set_index('CodeInd2')
+    Combined.to_csv('zipSS_IRS_Beds_Gas_ff_towers.csv')
+    Combined.to_pickle('zipSS_IRS_Beds_Gas_ff_towers.pk')
+    
 #running the functions (can skip functions pulling data to use versions on computer)
 FIPS = GetFIPSdata()
 Census = GetCensusData(FIPS)
@@ -306,4 +484,9 @@ GetIRSdata()
 IRS_CensusJoin(SSjoin)
 HospBeds()
 HospJoin()
-
+GetGasStations()
+GasJoin()
+GetFastFood()
+FastFoodJoin()
+GetTowers()
+TowersJoin()
