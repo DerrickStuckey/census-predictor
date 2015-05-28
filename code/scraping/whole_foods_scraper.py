@@ -7,7 +7,7 @@ import csv
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
-csv_filename = "./whole_foods_zip_counts.csv"
+csv_filename = "../../raw_data/whole_foods_zip_counts.csv"
 
 base_url = "http://www.wholefoodsmarket.com/stores/list/state?page="
 
@@ -29,8 +29,8 @@ def write_results(zip_counts):
         for zip_code in zip_counts.keys():
             writer.writerow([zip_code,str(zip_counts[zip_code])])
 
-# pages range from 0 to 21
-page_numbers = [str(x) for x in range(0,22,1)]
+# pages range from 0 to 20
+page_numbers = [str(x) for x in range(0,21,1)]
 
 print page_numbers
 
