@@ -35,21 +35,38 @@ page_numbers = [str(x) for x in range(0,21,1)]
 print page_numbers
 
 zip_counts = defaultdict(lambda:0)
+addresses_by_zip = defaultdict(list)
 
 #iterate through each page, counting by zip code
 for page_number in page_numbers:
     current_page_soup = run_page_query(page_number)
     postal_code_spans = current_page_soup.findAll(name='span', attrs={'class':'postal-code'})
+    # div class="thoroughfare"
+    street_address_divs = current_page_soup.findAll(name='div', attrs={'class':"thoroughfare"})
 
-    #increment the count for each postal code found
-    for postal_code_span in postal_code_spans:
+    #increment the count for each (5-digit) postal code found
+    # for postal_code_span in postal_code_spans:
+    #     postal_code = postal_code_span.text[:5]
+    #     # print(postal_code)
+    #     zip_counts[postal_code] += 1
+
+    for (street_address_div,postal_code_span) in zip(street_address_divs,postal_code_spans):
         postal_code = postal_code_span.text[:5]
-        print(postal_code)
-        zip_counts[postal_code] += 1
+        street_address = street_address_div.text
+        # print street_address
+        # print postal_code
+        addresses_by_zip[postal_code].append(street_address)
 
-for zip_code in zip_counts.keys()[0:10]:
-    print zip_code
-    print zip_counts[zip_code]
+def count_unique(input_list):
+    return len(set(input_list))
+
+# only count unique street addresses within a zip code
+for zip_code in addresses_by_zip.keys():
+    zip_counts[zip_code] = count_unique(addresses_by_zip[zip_code])
+
+# for zip_code in zip_counts.keys()[0:10]:
+#     print zip_code
+#     print zip_counts[zip_code]
 
 write_results(zip_counts)
 
