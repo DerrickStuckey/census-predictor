@@ -474,6 +474,64 @@ def TowersJoin():
     Combined = Combined.set_index('CodeInd2')
     Combined.to_csv('zipSS_IRS_Beds_Gas_ff_towers.csv')
     Combined.to_pickle('zipSS_IRS_Beds_Gas_ff_towers.pk')
+
+#Part XV: Pulling number of childcare centers and home daycare centers
+def GetDayCare():
+    import re
+    import urllib2
+    import os
+    import pandas as pd
+    
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    
+    CombinedData = pd.read_pickle('zipSS_IRS.pk')
+    info = CombinedData[['zipCode', 'state']]
+    info[['state']] = info[['state']].astype(str)
+    info['state2'] = info['state'].map(str.lower)
+    info['state2'] = info['state2'].str.replace(' ','_')
+    zc = []
+    careCenters = []
+    homeCare = []
+    stateFormat = []
+    stateOrig = CombinedData['state']
+    
+    for i, row in enumerate(info.values):   
+        zipCode = info['zipCode'][i]
+        states = info['state2'][i]
+        BASE_URL = 'http://childcarecenter.us/'
+        state = str(states) +'/'
+        END_URL = '_childcare'
+        url = BASE_URL + state + str(zipCode) + END_URL
+        print url
+        html = urllib2.urlopen(url).read()   
+        centers = re.findall('There are ([0-9]+)',html) 
+        familycare = re.findall('You may also want to check out ([0-9])+', html)
+        zc.append(zipCode)    
+        stateFormat.append(state)
+        if len(familycare):
+            homeCare.append(int(familycare[0]))
+        else:
+            homeCare.append(0)
+        if len(centers):
+            careCenters.append(int(centers[0]))
+        else:
+            careCenters.append(0)
+        print zipCode
+        
+    
+    d = {'zipCode': zc, 'careCenters': careCenters, 'homeDaycare': homeCare, 'state': stateOrig}
+    childCare = pd.DataFrame(d)
+    childCare.to_pickle('Daycare/childCare.pk')
+    childCare.to_csv('Daycare/childCare.csv')
+
+def DayCareJoin():
+    import pandas as pd   
+    CombinedData = pd.read_pickle('zipSS_IRS_Beds_Gas_ff_towers.pk')
+    daycare = pd.DataFrame.from_csv('Daycare/childCare.csv')
+    daycare=daycare[['careCenters','homeDaycare']]
+    Combined = CombinedData.join(daycare, how='left')
+    Combined.to_csv('zipSS_IRS_Beds_Gas_ff_towers_daycare.csv')
+    Combined.to_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare.pk')
     
 #running the functions (can skip functions pulling data to use versions on computer)
 FIPS = GetFIPSdata()
@@ -490,3 +548,5 @@ GetFastFood()
 FastFoodJoin()
 GetTowers()
 TowersJoin()
+GetDayCare()
+DayCareJoin()
