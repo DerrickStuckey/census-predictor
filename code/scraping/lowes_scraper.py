@@ -33,8 +33,9 @@ def scrape_single_zip(target_zip_code):
     return len(matching_zips)
 
 #testing:
-# zip_count = scrape_single_zip('30165')
+# zip_count = scrape_single_zip('99540')
 # print zip_count
+
 
 zip_counts = {}
 
