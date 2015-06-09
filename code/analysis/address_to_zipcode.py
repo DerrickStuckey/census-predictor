@@ -42,6 +42,6 @@ for line in markets:
 with open("Farmers Markets by zip code (2011).csv", "wb") as out:
     writer = csv.writer(out)
     writer.writerows(markets)
-        
+out.close()
         
         
