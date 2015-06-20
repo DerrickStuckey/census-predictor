@@ -532,7 +532,133 @@ def DayCareJoin():
     Combined = CombinedData.join(daycare, how='left')
     Combined.to_csv('zipSS_IRS_Beds_Gas_ff_towers_daycare.csv')
     Combined.to_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare.pk')
+
+def GetCVS():
+    from bs4 import BeautifulSoup
+    import urllib2
+    import os
+    import pandas as pd
+    import re
+    import time
     
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    
+    CombinedData = pd.read_pickle('zipSS_IRS.pk')
+    CombinedData[['state']] = CombinedData[['state']].astype(str)
+    CombinedData['state2'] = CombinedData['state'].str.replace(' ','-')
+    unique = CombinedData['state2'].unique()
+    
+    storeZipcodes = []
+    
+    #creating a list in which every store zip code is listed once
+    for i in unique:   
+            BASE_URL = 'http://www.cvs.com/stores/cvs-pharmacy-locations/'
+            url = BASE_URL + str(i)
+            html = urllib2.urlopen(url).read()    
+            soup = BeautifulSoup(html)
+            stateLinks = soup.find("div", class_="states")
+            hrefList = []
+            for a in stateLinks.find_all('a', href=True):
+                site = 'http://www.cvs.com' + a['href']
+                if site not in hrefList:
+                    hrefList.append(site)
+            for link in hrefList:
+                if link == 'http://www.cvs.com/stores/cvs-pharmacy-locations/New-York/Suffern%2Fmontebello':
+                    pass
+                else:
+                    time.sleep(3)
+                    print link
+                    cityPage = urllib2.urlopen(link).read()
+                    storeZips= re.findall('[A-Z]{2} ([0-9]{5})', cityPage)
+                    storeZipcodes.extend(storeZips[2:]) #two spurious zips show up at the start of all pages, removing these
+                    print storeZips[2:]
+    
+    df = pd.DataFrame(storeZipcodes)
+    df.to_pickle('CVS/FullStoreZipList.pk')
+    df.to_csv('CVS/FullStoreZipList.csv')
+    
+def JoinCVS():
+    import os
+    import pandas as pd
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    cvs = pd.read_pickle('CVS/FullStoreZipList.pk')
+    cvs.columns = ['CVSstores']
+    #getting count by zipcode
+    grouped= cvs.groupby(cvs['CVSstores']).count()
+    #merging into master data
+    CombinedData= pd.read_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare.pk')
+    CombinedData['CodeInd2'] = CombinedData.index
+    CombinedData['zipCode2']=CombinedData["zipCode"]
+    CombinedData=CombinedData.set_index('zipCode2')
+    final= CombinedData.join(grouped, how='left')
+    final['CVSstores']=final['CVSstores'].fillna(0)
+    final=final.set_index('CodeInd2')
+    final.to_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS.pk')
+    final.to_csv('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS.csv')
+    
+def GetHousing():
+    #median sale price pull RegionName(0), average median home price (2014-01 to 2014-12) 
+    import urllib2
+    import os
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    #downloading and importing zillow data sets
+    #median sale price
+    fileUrl = 'http://files.zillowstatic.com/research/public/Zip/Zip_Zhvi_AllHomes.csv'
+    f = urllib2.urlopen(fileUrl)
+    data = f.read()
+    with open('Zillow/medianHomePrice.csv', 'wb') as w:
+        w.write(data)
+    #median rent
+    fileUrl = 'http://files.zillowstatic.com/research/public/Zip/Zip_Zri_AllHomes.csv'
+    f = urllib2.urlopen(fileUrl)
+    data = f.read()
+    with open('Zillow/medianRentIndex.csv', 'wb') as w:
+        w.write(data)
+    #5-year change in value
+    fileUrl = 'http://files.zillowstatic.com/research/public/Zip/Zip_Zhvi_Summary_AllHomes.csv'
+    f = urllib2.urlopen(fileUrl)
+    data = f.read()
+    with open('Zillow/ValueChange5yr.csv', 'wb') as w:
+        w.write(data)
+
+
+def JoinHousing():
+    import pandas as pd
+    import os
+    
+    os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
+    #Getting average across year of median house prices by month 
+    medPrice = pd.DataFrame.from_csv('Zillow/medianHomePrice.csv', index_col=None)
+    medPrice=medPrice[['RegionName', '2014-01','2014-02','2014-03','2014-04','2014-05','2014-06','2014-07','2014-08','2014-09','2014-10','2014-11','2014-12',]]
+    medPrice['AvgHousePrc2014']=(medPrice['2014-01']+medPrice['2014-02']+medPrice['2014-03']+medPrice['2014-04']+medPrice['2014-05']+medPrice['2014-06']+medPrice['2014-07']+medPrice['2014-08']+medPrice['2014-09']+medPrice['2014-10']+medPrice['2014-11']+medPrice['2014-12'])/12
+    medPrice=medPrice[['RegionName','AvgHousePrc2014']]
+    medPrice["RegionName"] =medPrice.RegionName.map("{:05}".format)
+    medPrice=medPrice.set_index('RegionName')
+    
+    #Getting average across year of median rent 
+    medRent = pd.DataFrame.from_csv('Zillow/medianRentIndex.csv', index_col=None)
+    medRent['AvgRent2014']=(medRent['2014-01']+medRent['2014-02']+medRent['2014-03']+medRent['2014-04']+medRent['2014-05']+medRent['2014-06']+medRent['2014-07']+medRent['2014-08']+medRent['2014-09']+medRent['2014-10']+medRent['2014-11']+medRent['2014-12'])/12
+    medRent=medRent[['RegionName','AvgRent2014']]
+    medRent["RegionName"] =medRent.RegionName.map("{:05}".format)
+    medRent=medRent.set_index('RegionName')
+    
+    #Getting 5-year change in home values (5year)
+    ValChng = pd.DataFrame.from_csv('Zillow/ValueChange5yr.csv', index_col=None)
+    ValChng=ValChng[['RegionName','5Year']]
+    ValChng["RegionName"] =ValChng.RegionName.map("{:05}".format)
+    ValChng=ValChng.set_index('RegionName')
+    
+    #Indexing all data into Full data set
+    CombinedData= pd.read_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS.pk')
+    CombinedData['CodeInd2'] = CombinedData.index
+    CombinedData=CombinedData.set_index('zipCode')
+    final= CombinedData.join(medPrice, how='left')
+    final2=final.join(medRent, how='left')
+    final3=final2.join(ValChng, how='left')
+    final3=final3.set_index('CodeInd2')
+    final3.to_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS_zillow.pk')
+    final3.to_csv('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS_zillow.csv')   
+
 #running the functions (can skip functions pulling data to use versions on computer)
 FIPS = GetFIPSdata()
 Census = GetCensusData(FIPS)
@@ -550,3 +676,7 @@ GetTowers()
 TowersJoin()
 GetDayCare()
 DayCareJoin()
+GetCVS()
+JoinCVS()
+GetHousing()
+JoinHousing()
