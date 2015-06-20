@@ -596,13 +596,12 @@ def JoinCVS():
     final.to_pickle('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS.pk')
     final.to_csv('zipSS_IRS_Beds_Gas_ff_towers_daycare_CVS.csv')
     
-def GetHousing():
-    #median sale price pull RegionName(0), average median home price (2014-01 to 2014-12) 
+def GetHousing()
     import urllib2
     import os
     os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
     #downloading and importing zillow data sets
-    #median sale price
+    #median home value
     fileUrl = 'http://files.zillowstatic.com/research/public/Zip/Zip_Zhvi_AllHomes.csv'
     f = urllib2.urlopen(fileUrl)
     data = f.read()
@@ -627,7 +626,7 @@ def JoinHousing():
     import os
     
     os.chdir('C:/Users/Jillian/Documents/GWU/practicum')
-    #Getting average across year of median house prices by month 
+    #Getting average across year of median home values by month 
     medPrice = pd.DataFrame.from_csv('Zillow/medianHomePrice.csv', index_col=None)
     medPrice=medPrice[['RegionName', '2014-01','2014-02','2014-03','2014-04','2014-05','2014-06','2014-07','2014-08','2014-09','2014-10','2014-11','2014-12',]]
     medPrice['AvgHousePrc2014']=(medPrice['2014-01']+medPrice['2014-02']+medPrice['2014-03']+medPrice['2014-04']+medPrice['2014-05']+medPrice['2014-06']+medPrice['2014-07']+medPrice['2014-08']+medPrice['2014-09']+medPrice['2014-10']+medPrice['2014-11']+medPrice['2014-12'])/12
