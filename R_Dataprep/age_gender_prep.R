@@ -27,7 +27,8 @@ pop_age_gender_zip$X40_to_59 <- pop_age_gender_zip$Male.....40.to.44.years + pop
 pop_age_gender_zip$X60_plus <- pop_age_gender_zip$Total_Population - pop_age_gender_zip$X0_to_19 -
   pop_age_gender_zip$X20_to_39 - pop_age_gender_zip$X40_to_59
 
-pop_age_gender_clean <- data.frame("Total_Population"=pop_age_gender_zip$Total_Population,
+pop_age_gender_clean <- data.frame("ZipCode"=pop_age_gender_zip$zip.code.tabulation.area,
+                                   "Total_Population"=pop_age_gender_zip$Total_Population,
                                    "Male_Total"=pop_age_gender_zip$Male_Total,
                                    "Female_Total"=pop_age_gender_zip$Female_Total,
                                    "X0_to_19"=pop_age_gender_zip$X0_to_19,
