@@ -160,5 +160,37 @@ hist(smoothed_log(PracticumData$f_markets))
 PracticumDataTransformed$log_f_markets <- smoothed_log(PracticumData$f_markets)
 hist(PracticumDataTransformed$log_f_markets) #still pretty skewed
 
-#walmart_stores	target_stores	CVSstores
+# walmart locations
+hist(PracticumData$walmart_stores)
+PracticumDataTransformed$walmart_stores <- PracticumData$walmart_stores #no change
+
+# target_stores
+hist(PracticumData$target_stores)
+PracticumDataTransformed$target_stores <- PracticumData$target_stores #no change
+
+# CVSstores
+hist(PracticumData$CVSstores)
+summary(PracticumData$CVSstores)
+PracticumDataTransformed$CVSstores <- PracticumData$CVSstores #no change
+
+# home_depot_count
+hist(PracticumData$home_depot_count)
+PracticumDataTransformed$home_depot_count <- PracticumData$home_depot_count #no change
+
+# lowes_count	
+hist(PracticumData$lowes_count)
+PracticumDataTransformed$lowes_count <- PracticumData$lowes_count #no change
+
+# whole_foods_count
+hist(PracticumData$whole_foods_count)
+PracticumDataTransformed$whole_foods_count <- PracticumData$whole_foods_count #no change
+
+# bass pro locations
+hist(PracticumData$basspro_count)
+PracticumDataTransformed$basspro_count <- PracticumData$basspro_count #no change
+
+# starbucks
+hist(PracticumData$starbucks_count)
+PracticumDataTransformed$log_starbucks <- smoothed_log(PracticumData$starbucks_count)
+hist(PracticumDataTransformed$log_starbucks)
 
