@@ -194,3 +194,7 @@ hist(PracticumData$starbucks_count)
 PracticumDataTransformed$log_starbucks <- smoothed_log(PracticumData$starbucks_count)
 hist(PracticumDataTransformed$log_starbucks)
 
+## save transformed data file
+write.csv(PracticumDataTransformed, file="../prepared_data/PracticumDataTransformed.csv",
+          row.names=FALSE, quote=FALSE)
+
