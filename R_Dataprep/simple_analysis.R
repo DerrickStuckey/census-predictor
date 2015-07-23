@@ -19,13 +19,19 @@ pop_mod_ssirs <- lm(X2010pop ~ X2010.SSrecip + IRS_rtrns,
                        data=PracticumData)
 summary(pop_mod_ssirs)
 ss_irs_na_idx <- is.na(PracticumDataTransformed$log_ssrecip) | is.na(PracticumDataTransformed$log_irsreturns)
-plot(PracticumData$X2010pop[!ss_irs_na_idx], pop_mod_ssirs$residuals)
+plot(PracticumData$X2010pop[!ss_irs_na_idx], pop_mod_ssirs$residuals,
+     main="Population ~ SS, IRS residuals")
+plot(PracticumData$X2010.SSrecip[!ss_irs_na_idx], pop_mod_ssirs$residuals)
+plot(PracticumData$IRS_rtrns[!ss_irs_na_idx], pop_mod_ssirs$residuals)
 
 log_pop_mod_ssirs <- lm(log_pop ~ log_ssrecip + log_irsreturns, 
                     data=PracticumDataTransformed)
 summary(log_pop_mod_ssirs)
 ss_irs_na_idx <- is.na(PracticumDataTransformed$log_ssrecip) | is.na(PracticumDataTransformed$log_irsreturns)
-plot(PracticumDataTransformed$log_pop[!ss_irs_na_idx], log_pop_mod_ssirs$residuals)
+plot(PracticumDataTransformed$log_pop[!ss_irs_na_idx], log_pop_mod_ssirs$residuals,
+     main="Log-scaled Population ~ SS, IRS residuals")
+plot(PracticumDataTransformed$log_ssrecip[!ss_irs_na_idx], log_pop_mod_ssirs$residuals)
+plot(PracticumDataTransformed$log_irsreturns[!ss_irs_na_idx], log_pop_mod_ssirs$residuals)
 ## end residuals for log and untransformed population vs SS recips, IRS returns
 
 log_pop_mod_full <- lm(log_pop ~ log_ssrecip + log_irsreturns +
@@ -46,6 +52,7 @@ white_mod_simple <- lm(xformed_white ~ log_gas_stations + log_fastfood + log_car
                          log_hosp_beds + log_towers + log_homeDaycare + log_starbucks + 
                          home_depot_count + lowes_count + whole_foods_count, 
                        data=PracticumDataTransformed)
+summary(white_mod_simple)
 
 # take subset of data where log_percblack is not negative infinity
 DataBlackFinite <- PracticumDataTransformed[!is.infinite(PracticumDataTransformed$log_percblack),]
@@ -54,7 +61,13 @@ black_mod_simple <- lm(log_percblack ~ log_gas_stations + log_fastfood + log_car
                          log_hosp_beds + log_towers + log_homeDaycare + log_starbucks + 
                          home_depot_count + lowes_count + whole_foods_count, 
                        data=DataBlackFinite)
+summary(black_mod_simple)
 
-## look at residuals to determine whether log-scaling is appropriate
-
+# bachelors degree percent
+DataBach <- PracticumDataTransformed[!is.na(PracticumDataTransformed$log_percbachelors),]
+bach_mod_simple <- lm(log_percbachelors ~ log_gas_stations + log_fastfood + log_careCenters + 
+                       log_hosp_beds + log_towers + log_homeDaycare + log_starbucks + 
+                       home_depot_count + lowes_count + whole_foods_count, 
+                     data=DataBach)
+summary(bach_mod_simple)
 
