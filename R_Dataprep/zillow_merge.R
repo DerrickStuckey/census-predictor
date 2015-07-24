@@ -23,4 +23,5 @@ merged_2 <- merge(merged_1, rent_slim, by="zipCode", all.x=TRUE, all.y=FALSE)
 
 merged_3 <- merge(merged_2, valuechange_slim, by="zipCode", all.x=TRUE, all.y=FALSE)
 
-
+write.csv(merged_3, "../prepared_data/PracticumDataFull.csv",
+          row.names=FALSE, quote=FALSE)
