@@ -33,8 +33,12 @@ FullCountsData <- merge(CountsWithRace, pop_age_gender_zip_slim,
 FullCountsData$countbachelors <- PracticumData$percbachelors * PracticumData$X2010pop
 FullCountsData$countgraddegree <- PracticumData$percgraddegree * PracticumData$X2010pop
 
+zipCodes <- FullCountsData$zipCode
+FullCountsData <- subset(FullCountsData, select=-c(zipCode,stateCode))
+
 # aggregate by zip code
-CountsDataAgged <- aggregate(FullCountsData, by=list(PracticumData$zipCode), FUN=sum)
+CountsDataAgged <- aggregate(FullCountsData, by=list(zipCodes), FUN=sum)
+names(CountsDataAgged)[names(CountsDataAgged)=="Group.1"] <- "zipCode"
 
 ### Compute primary state for each zip code ###
 
@@ -64,9 +68,6 @@ PrimaryStateData$primaryState <- DedupedData$state
 PrimaryStateData$primaryStateCode <- DedupedData$stateCode
 
 FinishedData <- merge(CountsDataAgged, PrimaryStateData, by="zipCode")
-
-#remove a few erroneous columns
-FinishedData <- subset(FinishedData, select=-c(stateCode,Group.1))
 
 #write the finished data
 write.csv(FinishedData, file="../prepared_data/PracticumDataDedupedZips.csv",
