@@ -5,11 +5,7 @@ PracticumData <- read.csv("../prepared_data/PracticumDataFull.csv", stringsAsFac
 
 # extract columns representing counts
 CountsOnlyData <- subset(PracticumData, 
-                         select=c(X2010pop, X2010.SSrecip, IRS_rtrns, Beds, gasStations, 
-                                  count_fastfood, towers, careCenters, homeDaycare,
-                                  f_markets, walmart_stores, target_stores, CVSstores, 
-                                  home_depot_count, lowes_count, whole_foods_count,
-                                  basspro_count, starbucks_count, zipCode, stateCode))
+                         select=c(X2010pop, X2010.SSrecip, IRS_rtrns, zipCode, stateCode))
 
 # load raw race count data
 pop_race_zip_derrick <- read.csv("../raw_data/pop_race_zip_derrick.csv", stringsAsFactors=FALSE)
@@ -37,8 +33,10 @@ zipCodes <- FullCountsData$zipCode
 FullCountsData <- subset(FullCountsData, select=-c(zipCode,stateCode))
 
 # aggregate by zip code
-CountsDataAgged <- aggregate(FullCountsData, by=list(zipCodes), FUN=sum)
+CountsDataAgged <- aggregate(FullCountsData, by=list(zipCodes), FUN=sum, na.rm=TRUE)
 names(CountsDataAgged)[names(CountsDataAgged)=="Group.1"] <- "zipCode"
+
+TODO fix this shit - does na.rm=TRUE remove the whole row?
 
 ### Compute primary state for each zip code ###
 
@@ -54,8 +52,8 @@ primaryZipMap <- data.frame("zipCode"=DedupedData$zipCode,
                             "stateCode"=DedupedData$stateCode,
                             "state"=DedupedData$state)
 
-write.csv(primaryZipMap, file="../prepared_data/zip_with_primary_state.csv",
-          row.names=FALSE, quote=FALSE)
+# write.csv(primaryZipMap, file="../prepared_data/zip_with_primary_state.csv",
+#           row.names=FALSE, quote=FALSE)
 
 ### For variables not corresponding to population counts, ###
 ### take the value from the zip/state
@@ -63,7 +61,12 @@ write.csv(primaryZipMap, file="../prepared_data/zip_with_primary_state.csv",
 
 PrimaryStateData <- subset(DedupedData, select=c(zipCode,medhhsincome,homeprice_201501,
                                                  rent_201501,valuechange_5year,
-                                                 com_elecrate, ind_elecrate, res_elecrate))
+                                                 com_elecrate, ind_elecrate, res_elecrate,
+                                                 Beds, gasStations, 
+                                                 count_fastfood, towers, careCenters, homeDaycare,
+                                                 f_markets, walmart_stores, target_stores, CVSstores, 
+                                                 home_depot_count, lowes_count, whole_foods_count,
+                                                 basspro_count, starbucks_count))
 PrimaryStateData$primaryState <- DedupedData$state
 PrimaryStateData$primaryStateCode <- DedupedData$stateCode
 
