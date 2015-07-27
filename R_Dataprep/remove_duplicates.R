@@ -3,9 +3,14 @@
 # load main data set
 PracticumData <- read.csv("../prepared_data/PracticumDataFull.csv", stringsAsFactors=FALSE)
 
+# compute counts for other percentage variables, weighted sum by population
+PracticumData$countbachelors <- PracticumData$percbachelors * PracticumData$X2010pop
+PracticumData$countgraddegree <- PracticumData$percgraddegree * PracticumData$X2010pop
+
 # extract columns representing counts
 CountsOnlyData <- subset(PracticumData, 
-                         select=c(X2010pop, X2010.SSrecip, IRS_rtrns, zipCode, stateCode))
+                         select=c(X2010pop, X2010.SSrecip, IRS_rtrns, zipCode, 
+                                  stateCode, countbachelors, countgraddegree))
 
 # load raw race count data
 pop_race_zip_derrick <- read.csv("../raw_data/pop_race_zip_derrick.csv", stringsAsFactors=FALSE)
@@ -26,17 +31,18 @@ FullCountsData <- merge(CountsWithRace, pop_age_gender_zip_slim,
                         by.y=c("zip.code.tabulation.area","state"))
 
 # compute counts for other percentage variables, weighted sum by population
-FullCountsData$countbachelors <- PracticumData$percbachelors * PracticumData$X2010pop
-FullCountsData$countgraddegree <- PracticumData$percgraddegree * PracticumData$X2010pop
+# PracticumData$countbachelors <- PracticumData$percbachelors * PracticumData$X2010pop
+# PracticumData$countgraddegree <- PracticumData$percgraddegree * PracticumData$X2010pop
+# DegreeData <- data.frame("zipCode"=PracticumData$zipCode,
+#                          "stateCode"=PracticumData$stateCode,
+#                          "countbachelors"=)
 
 zipCodes <- FullCountsData$zipCode
 FullCountsData <- subset(FullCountsData, select=-c(zipCode,stateCode))
 
 # aggregate by zip code
-CountsDataAgged <- aggregate(FullCountsData, by=list(zipCodes), FUN=sum, na.rm=TRUE)
+CountsDataAgged <- aggregate(FullCountsData, by=list(zipCodes), FUN=sum, na.rm=FALSE)
 names(CountsDataAgged)[names(CountsDataAgged)=="Group.1"] <- "zipCode"
-
-TODO fix this shit - does na.rm=TRUE remove the whole row?
 
 ### Compute primary state for each zip code ###
 
@@ -71,6 +77,13 @@ PrimaryStateData$primaryState <- DedupedData$state
 PrimaryStateData$primaryStateCode <- DedupedData$stateCode
 
 FinishedData <- merge(CountsDataAgged, PrimaryStateData, by="zipCode")
+
+# compute percentages from counts
+FinishedData$percbachelors <- FinishedData$countbachelors / FinishedData$X2010pop
+FinishedData$percgraddegree <- FinishedData$countgraddegree / FinishedData$X2010pop
+FinishedData$percblack <- FinishedData$Black / FinishedData$X2010pop * 100
+FinishedData$percwhite <- FinishedData$White / FinishedData$X2010pop * 100
+FinishedData$percasian <- FinishedData$Asian / FinishedData$X2010pop * 100
 
 #write the finished data
 write.csv(FinishedData, file="../prepared_data/PracticumDataDedupedZips.csv",
