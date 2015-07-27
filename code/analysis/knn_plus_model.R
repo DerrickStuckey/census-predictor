@@ -142,4 +142,57 @@ knn_asian_zillow <- knn.reg(train=zillow_only_training,test=zillow_only_validati
 summary(knn_asian_zillow$pred)
 rsq_val(knn_asian_zillow$pred,zillow_nna_validation$percasian)
 
+## lat/lon + zillow model
+training_loc_rent_nna <- training_data[!is.na(training_data$latitude) &
+                                         !is.na(training_data$rent_201501),]
+validation_loc_rent_nna <- validation_data[!is.na(validation_data$latitude) &
+                                         !is.na(validation_data$rent_201501),]
+
+#TODO find avg population of zips w/, w/o zillow rent data (are those w/o smaller?)
+
+training_loc_rent_only <- subset(training_loc_rent_nna, select=c(latitude,longitude,
+                                                                 rent_201501))
+validation_loc_rent_only <- subset(validation_loc_rent_nna, select=c(latitude,longitude,
+                                                                 rent_201501))
+# rescale rent variable to match the scale of latitude
+rentsd <- sd(training_loc_rent_only$rent_201501)
+latsd <- sd(training_loc_rent_only$latitude)
+lonsd <- sd(training_loc_rent_only$longitude)
+training_loc_rent_only$rent_201501 <- training_loc_rent_only$rent_201501 / rentsd * latsd
+validation_loc_rent_only$rent_201501 <- validation_loc_rent_only$rent_201501 / rentsd * latsd
+
+# loc/rent percentage white model
+knn_white_loc_rent <- knn.reg(train=training_loc_rent_only,test=validation_loc_rent_only,
+                            y=training_loc_rent_nna$percwhite,k=4)
+summary(knn_white_loc_rent$pred)
+rsq_val(knn_white_loc_rent$pred,validation_loc_rent_nna$percwhite)
+
+# loc/rent percentage black model
+knn_black_loc_rent <- knn.reg(train=training_loc_rent_only,test=validation_loc_rent_only,
+                              y=training_loc_rent_nna$percblack,k=4)
+summary(knn_black_loc_rent$pred)
+rsq_val(knn_black_loc_rent$pred,validation_loc_rent_nna$percblack)
+
+# loc/rent percentage asian model
+knn_asian_loc_rent <- knn.reg(train=training_loc_rent_only,test=validation_loc_rent_only,
+                              y=training_loc_rent_nna$percasian,k=4)
+summary(knn_asian_loc_rent$pred)
+rsq_val(knn_asian_loc_rent$pred,validation_loc_rent_nna$percasian)
+
+knn_white_loc_rent_preds_by_zip <- data.frame("zipCode"=validation_loc_rent_nna$zipCode,
+                                              "loc_rent_pred"=knn_white_loc_rent$pred)
+
+knn_white_loc_preds_by_zip <- data.frame("zipCode"=validation_data_withlat$zipCode,
+                                     "loc_pred"=knn_white_loc$pred)
+
+combined_preds <- merge(knn_white_loc_rent_preds_by_zip, knn_white_loc_preds_by_zip,
+                        all.x=FALSE, all.y=TRUE)
+combined_preds$loc_rent_pred[is.na(combined_preds$loc_rent_pred)] <- 
+  combined_preds$loc_pred[is.na(combined_preds$loc_rent_pred)]
+
+View(combined_preds)
+
+combined_fit <- lm(validation_data_withlat$percwhite ~ combined_preds$loc_rent_pred + combined_preds$loc_pred)
+
+#slightly improved!
 
