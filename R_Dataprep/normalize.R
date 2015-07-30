@@ -30,4 +30,5 @@ Practicum_Predictors_Normalized$longitude <- (Practicum_FinalVersion$longitude -
 Practicum_Predictors_Normalized$zipCode <- Practicum_FinalVersion$zipCode
 
 #save as a csv
-write.csv()
+write.csv(Practicum_Predictors_Normalized, file="../prepared_data/Practicum_Predictors_Normalized.csv",
+          row.names=FALSE,quote=FALSE)
