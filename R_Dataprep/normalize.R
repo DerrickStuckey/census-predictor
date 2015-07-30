@@ -3,8 +3,6 @@
 # load data
 Practicum_FinalVersion <- read.csv("~/Desktop/GW/Practicum/census-predictor/prepared_data/Practicum_FinalVersion.csv", stringsAsFactors=FALSE)
 
-# simplelm <- lm(perc_white ~ rent_201501,data=Practicum_FinalVersion)
-
 Practicum_Predictors <- subset(Practicum_FinalVersion, 
                                select=c(SS_recip, IRS_returns, rent_201501, homeprice, valuechange_5year, com_elecrate, ind_elecrate, res_elecrate, beds, gas_stations, fastfood,	towers,	care_centers,	home_daycare,	farmers_markets,	walmart,	target,	cvs,	home_depot,	lowes,	whole_foods,	basspro,	starbucks,
                                         beds_avg,  gas_stations_avg,	fastfood_avg,	towers_avg,	care_centers_avg,	home_daycare_avg,	farmers_markets_avg,	walmart_avg,	target_avg,	cvs_avg,	home_depot_avg,	lowes_avg,	whole_foods_avg,	basspro_avg,	starbucks_avg,	SS_recip_sum,	IRS_returns_sum,	rent_sum,	homeprice_sum,
