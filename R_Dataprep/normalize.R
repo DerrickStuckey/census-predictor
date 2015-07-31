@@ -6,7 +6,8 @@ Practicum_FinalVersion <- read.csv("~/Desktop/GW/Practicum/census-predictor/prep
 Practicum_Predictors <- subset(Practicum_FinalVersion, 
                                select=c(SS_recip, IRS_returns, rent_201501, homeprice, valuechange_5year, com_elecrate, ind_elecrate, res_elecrate, beds, gas_stations, fastfood,	towers,	care_centers,	home_daycare,	farmers_markets,	walmart,	target,	cvs,	home_depot,	lowes,	whole_foods,	basspro,	starbucks,
                                         beds_avg,  gas_stations_avg,	fastfood_avg,	towers_avg,	care_centers_avg,	home_daycare_avg,	farmers_markets_avg,	walmart_avg,	target_avg,	cvs_avg,	home_depot_avg,	lowes_avg,	whole_foods_avg,	basspro_avg,	starbucks_avg,	SS_recip_sum,	IRS_returns_sum,	rent_sum,	homeprice_sum,
-                                        SS_recip_avg,  IRS_returns_avg,	rent_avg,	homeprice_avg))
+                                        SS_recip_avg,  IRS_returns_avg,	rent_avg,	homeprice_avg,
+                                        beds_sum, gas_stations_sum,	fastfood_sum,	towers_sum,	care_centers_sum,	home_daycare_sum,	farmers_markets_sum,	walmart_sum,	target_sum,	cvs_sum,	home_depot_sum,	lowes_sum,	whole_foods_sum,	basspro_sum,	starbucks_sum))
 
 Practicum_Predictor_Flags <- subset(Practicum_FinalVersion,
                           select=c(SS_imputed,IRS_imputed,rent_imputed,homeprice_imputed,valchange_imputed))
