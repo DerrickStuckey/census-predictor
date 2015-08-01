@@ -19,17 +19,19 @@ select_validation <- function(df, k, iteration) {
 }
 
 get_chunk_size <- function(numrows, k) {
-  return(floor(numrows/k))
+  return(numrows/k)
 }
 
 get_validation_start_idx <- function(numrows, k, iteration) {
   chunk_size <- get_chunk_size(numrows,k)
-  return( iteration*chunk_size)
+  val_start_idx_exact <- (iteration-1)*chunk_size
+  return( floor(val_start_idx_exact)+1 )
 }
 
 get_validation_end_idx <- function(numrows, k, iteration) {
   chunk_size <- get_chunk_size(numrows,k)
-  return( (iteration+1)*chunk_size-1)
+  val_end_idx_exact <- iteration*chunk_size
+  return( floor(val_end_idx_exact))
 }
 
 
