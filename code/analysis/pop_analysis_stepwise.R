@@ -67,7 +67,7 @@ for (iter in iters) {
 }
 
 mean(rsq_vals_simple)
-boxplot(rsq_vals_simple)
+boxplot(rsq_vals_simple,main="Crossval R-sq, SS + IRS only")
 
 ##
 ## test stepwise-selected model
@@ -85,7 +85,7 @@ for (iter in iters) {
 }
 
 mean(rsq_vals_step)
-boxplot(rsq_vals_step) 
+boxplot(rsq_vals_step,main="Crossval R-sq, all vars") 
 
 ##
 ## construct stepwise regression model w/ all non-gov't vars
@@ -124,7 +124,7 @@ for (iter in iters) {
 }
 
 mean(rsq_vals_nogovt)
-boxplot(rsq_vals_nogovt)
+boxplot(rsq_vals_nogovt,main="Crossval R-sq, no SS, IRS")
 
 ##
 ## TODO test log-scaled pop model
