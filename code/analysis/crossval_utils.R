@@ -1,0 +1,35 @@
+## cross-validation utils
+
+shuffle <- function(df) {
+  return(df[sample(1:nrow(df)), ])
+}
+
+select_training <- function(df, k, iteration) {
+  numrows <- nrow(df)
+  val_start_idx <- get_validation_start_idx(numrows, k, iteration)
+  val_end_idx <- get_validation_end_idx(numrows, k, iteration)
+  return(df[-(val_start_idx:val_end_idx),])
+}
+
+select_validation <- function(df, k, iteration) {
+  numrows <- nrow(df)
+  start_idx <- get_validation_start_idx(numrows, k, iteration)
+  end_idx <- get_validation_end_idx(numrows, k, iteration)
+  return( df[start_idx:end_idx,])
+}
+
+get_chunk_size <- function(numrows, k) {
+  return(floor(numrows/k))
+}
+
+get_validation_start_idx <- function(numrows, k, iteration) {
+  chunk_size <- get_chunk_size(numrows,k)
+  return( iteration*chunk_size)
+}
+
+get_validation_end_idx <- function(numrows, k, iteration) {
+  chunk_size <- get_chunk_size(numrows,k)
+  return( (iteration+1)*chunk_size-1)
+}
+
+
