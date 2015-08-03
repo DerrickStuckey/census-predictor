@@ -74,7 +74,7 @@ bach_tree_rsq <- rsq_val(bach_tree_preds,Edu_Model_Data_Shuffled$perc_bachelors)
 
 k=10
 iters <- seq(1,k,by=1)
-rsq_vals_bach_step <- rep(NA,k)
+rsq_vals_bach_tree <- rep(NA,k)
 for (iter in iters) {
   training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
@@ -83,11 +83,11 @@ for (iter in iters) {
                          data=training_cur)
   preds_cur <- predict(bach_tree_cur,newdata=validation_cur)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_bachelors)
-  rsq_vals_bach_step[iter] <- rsq_cur
+  rsq_vals_bach_tree[iter] <- rsq_cur
 }
 
-mean(rsq_vals_bach_step)
-boxplot(rsq_vals_bach_step,main="Crossval R-sq Pct Bachelors Tree")
+mean(rsq_vals_bach_tree)
+boxplot(rsq_vals_bach_tree,main="Crossval R-sq Pct Bachelors Tree")
 
 ##
 ## random forest model for pct bachelors
@@ -98,4 +98,8 @@ print(bach_forest_fit) # view results
 importance(bach_forest_fit) # importance of each predictor
 #save the model
 save(bach_forest_fit,file="saved_models/bach_deg_rf.rda")
+
+##
+## test on holdout data
+##
 
