@@ -1,5 +1,7 @@
 ## Compute percentages for target variables
 
+Practicum_FinalVersion <- read.csv("~/Desktop/GW/Practicum/census-predictor/prepared_data/Practicum_FinalVersion.csv", stringsAsFactors=FALSE)
+
 # compute race percentages
 # Practicum_FinalVersion$percwhite <- Practicum_FinalVersion$race_white / Practicum_FinalVersion$pop_2010
 # Practicum_FinalVersion$percblack <- Practicum_FinalVersion$race_black / Practicum_FinalVersion$pop_2010
@@ -53,7 +55,13 @@ Practicum_Target_Vars <- subset(Practicum_FinalVersion,
                                          SS_recip_avg,  IRS_returns_avg,	rent_avg,	homeprice_avg,SS_imputed,IRS_imputed,rent_imputed,homeprice_imputed,valchange_imputed,latitude,longitude,
                                          beds_sum, gas_stations_sum,  fastfood_sum,	towers_sum,	care_centers_sum,	home_daycare_sum,	farmers_markets_sum,	walmart_sum,	target_sum,	cvs_sum,	home_depot_sum,	lowes_sum,	whole_foods_sum,	basspro_sum,	starbucks_sum))
 
-# View(Practicum_Target_Vars)
+# convert imputed target vars back to NA
+Practicum_Target_Vars$med_income[Practicum_Target_Vars$med_income_imputed == 1] <- NA
+Practicum_Target_Vars <- subset(Practicum_Target_Vars, 
+                                select=-c(bachelors_degree_avg,bachelors_degree_sum,
+                                          grad_degree_avg,grad_degree_avg,
+                                          med_income_imputed,bachelors_imputed,
+                                          grad_imputed))
 
 write.csv(Practicum_Target_Vars, file="../prepared_data/Practicum_Targets.csv",
           row.names=FALSE,quote=FALSE)
