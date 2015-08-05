@@ -36,16 +36,19 @@ Edu_Model_Data_Shuffled <- shuffle(Edu_Model_Data)
 # summary(bachstep)
 # stepformula_bach <- formula(terms(bachstep))
 stepformula_bach <- perc_bachelors ~ SS_recip + IRS_returns + rent_201501 + homeprice + 
-  com_elecrate + res_elecrate + beds + gas_stations + farmers_markets + 
-  walmart + target + cvs + home_depot + lowes + whole_foods + 
-  starbucks + gas_stations_avg + fastfood_avg + care_centers_avg + 
-  home_daycare_avg + farmers_markets_avg + walmart_avg + home_depot_avg + 
-  lowes_avg + starbucks_avg + SS_recip_sum + IRS_returns_sum + 
-  rent_sum + homeprice_sum + SS_recip_avg + IRS_returns_avg + 
-  rent_avg + homeprice_avg + towers_sum + home_daycare_sum + 
-  walmart_sum + target_sum + cvs_sum + home_depot_sum + lowes_sum + 
-  whole_foods_sum + SS_imputed + IRS_imputed + rent_imputed + 
-  valchange_imputed + latitude + longitude
+  valuechange_5year + ind_elecrate + res_elecrate + beds + 
+  care_centers + home_daycare + farmers_markets + walmart + 
+  target + cvs + home_depot + lowes + whole_foods + starbucks + 
+  gas_stations_avg + fastfood_avg + towers_avg + care_centers_avg + 
+  home_daycare_avg + walmart_avg + cvs_avg + home_depot_avg + 
+  SS_recip_sum + IRS_returns_sum + rent_sum + homeprice_sum + 
+  SS_recip_avg + IRS_returns_avg + rent_avg + homeprice_avg + 
+  towers_sum + care_centers_sum + home_daycare_sum + farmers_markets_sum + 
+  walmart_sum + target_sum + cvs_sum + lowes_sum + whole_foods_sum + 
+  starbucks_sum + SS_imputed + IRS_imputed + rent_imputed + 
+  valchange_imputed + latitude + longitude + avgDependents + 
+  avgJointRtrns + avgChldTxCred + avgUnemp + avgFrmRtrns + 
+  avgTaxes
 
 # and test the model's performance w/ cross-validation
 k=5
