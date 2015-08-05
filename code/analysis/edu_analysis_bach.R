@@ -101,7 +101,7 @@ for (iter in iters) {
   training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
   bach_rf_cur <- randomForest(perc_bachelors ~ .-zipCode-state_code, data=training_cur,
-                              ntree=200,mtry=20,maxnodes=200)
+                              ntree=200,mtry=20,maxnodes=300)
   preds_cur <- predict(bach_rf_cur,newdata=validation_cur)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_bachelors)
   rsq_vals_bach_rf[iter] <- rsq_cur
@@ -109,17 +109,24 @@ for (iter in iters) {
 
 mean(rsq_vals_bach_rf)
 boxplot(rsq_vals_bach_rf,main="Crossval R-sq Pct Bachelors RF")
-# observed rsq: 0.5694
+# observed rsq: 0.5694 w/ ntree=200,mtry=20,maxnodes=200
+# observed rsq: 0.5780 w/ ntree=200,mtry=20,maxnodes=300
+
 
 # RF model w/ full training data
 bach_forest_fit <- randomForest(perc_bachelors ~ .-zipCode-state_code, data=Edu_Model_Data_Shuffled,
-                                ntree=200,mtry=20,maxnodes=200)
+                                ntree=200,mtry=20,maxnodes=300)
 print(bach_forest_fit) # view results 
 importance(bach_forest_fit) # importance of each predictor
 #save the model
 save(bach_forest_fit,file="saved_models/bach_deg_rf.rda")
 
-
+# order by importance
+term_importance <- data.frame("var"=row.names(importance(bach_forest_fit)),
+                              importance(bach_forest_fit))
+sorted_importance <- term_importance[order(term_importance$IncNodePurity,
+                                           decreasing=TRUE),]
+sorted_importance[0:5,]
 
 ##
 ## test on holdout data
