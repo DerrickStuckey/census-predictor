@@ -69,12 +69,8 @@ boxplot(rsq_vals_bach_step,main="Crossval R-sq Pct Bachelors Stepwise")
 ##
 ## Fit decision tree for percent bachelor's
 ##
-bach_tree_fit <- rpart(perc_bachelors ~ .-zipCode-state_code, 
-                       method="anova",
-                       data=Edu_Model_Data_Shuffled,)
-bach_tree_preds <- predict(bach_tree_fit,newdata=Edu_Model_Data_Shuffled)
-bach_tree_rsq <- rsq_val(bach_tree_preds,Edu_Model_Data_Shuffled$perc_bachelors)
 
+# test tree cross-validation performance
 k=5
 iters <- seq(1,k,by=1)
 rsq_vals_bach_tree <- rep(NA,k)
@@ -83,7 +79,8 @@ for (iter in iters) {
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
   bach_tree_cur <- rpart(perc_bachelors ~ .-zipCode-state_code, 
                          method="anova",
-                         data=training_cur)
+                         data=training_cur,
+                         control=rpart.control(cp=0.001,maxdepth=7))
   preds_cur <- predict(bach_tree_cur,newdata=validation_cur)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_bachelors)
   rsq_vals_bach_tree[iter] <- rsq_cur
@@ -91,6 +88,15 @@ for (iter in iters) {
 
 mean(rsq_vals_bach_tree)
 boxplot(rsq_vals_bach_tree,main="Crossval R-sq Pct Bachelors Tree")
+
+# Tree model w/ full training set
+bach_tree_fit <- rpart(perc_bachelors ~ .-zipCode-state_code, 
+                       method="anova",
+                       data=Edu_Model_Data_Shuffled,
+                       control=rpart.control(cp=0.001,maxdepth=7))
+bach_tree_preds <- predict(bach_tree_fit,newdata=Edu_Model_Data_Shuffled)
+bach_tree_rsq <- rsq_val(bach_tree_preds,Edu_Model_Data_Shuffled$perc_bachelors)
+
 
 ##
 ## random forest model for pct bachelors
