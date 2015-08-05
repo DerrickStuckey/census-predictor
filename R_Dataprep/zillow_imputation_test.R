@@ -3,6 +3,7 @@
 library(FNN)
 
 source("./census_utils.R")
+source("../utils/crossval_utils.R")
 
 # load data
 PracticumDataWithLocs <- read.csv("../prepared_data/PracticumDataWithLocs.csv", stringsAsFactors=FALSE)
@@ -32,22 +33,25 @@ usable_data <- usable_data[!is.na(usable_data$rent_201501),]
 
 dim(usable_data)
 
-# further split into current training, validation data sets
-nonhouldout_size <- nrow(usable_data)
-training_prop <- 0.8
-training_idx <- sample(nonhouldout_size,nonhouldout_size*training_prop)
-training_data <- usable_data[training_idx,]
-validation_data <- usable_data[-training_idx,]
+crossval_data <- shuffle(usable_data)
+# test params w/ cross-validaton
+k=5
+iters <- seq(1,k,by=1)
+rsq_vals_rent <- rep(NA,k)
+for (iter in iters) {
+  training_cur <- select_training(crossval_data,k,iter)
+  validation_cur <- select_validation(crossval_data,k,iter)
+  ziploc_train_cur <- subset(training_cur, select=c(latitude,longitude))
+  ziploc_val_cur <- subset(validation_cur, select=c(latitude,longitude))
+  knn_rent_loc <- knn.reg(train=ziploc_train_cur,test=ziploc_val_cur,
+                          y=training_cur$rent_201501,k=4)
+  preds_cur <- knn_rent_loc$pred
+  rsq_cur <- rsq_val(preds_cur,validation_cur$rent_201501)
+  rsq_vals_rent[iter] <- rsq_cur
+}
 
-# select only lat/lon vars
-ziploc_only_training <- subset(training_data,select=c(latitude,longitude))
-ziploc_only_validation <- subset(validation_data,select=c(latitude,longitude))
-
-# obtain lat/lon knn validation predictions for percent white
-knn_rent_loc <- knn.reg(train=ziploc_only_training,test=ziploc_only_validation,
-                         y=training_data$rent_201501,k=4)
-summary(knn_rent_loc$pred)
-rsq_val(knn_rent_loc$pred,validation_data$rent_201501)
+mean(rsq_vals_rent)
+boxplot(rsq_vals_rent)
 
 ###
 ### Test homeprice imputation
@@ -67,22 +71,25 @@ usable_data <- usable_data[!is.na(usable_data$homeprice_201501),]
 
 dim(usable_data)
 
-# further split into current training, validation data sets
-nonhouldout_size <- nrow(usable_data)
-training_prop <- 0.8
-training_idx <- sample(nonhouldout_size,nonhouldout_size*training_prop)
-training_data <- usable_data[training_idx,]
-validation_data <- usable_data[-training_idx,]
+crossval_data <- shuffle(usable_data)
+# test params w/ cross-validaton
+k=5
+iters <- seq(1,k,by=1)
+rsq_vals_homeprice <- rep(NA,k)
+for (iter in iters) {
+  training_cur <- select_training(crossval_data,k,iter)
+  validation_cur <- select_validation(crossval_data,k,iter)
+  ziploc_train_cur <- subset(training_cur, select=c(latitude,longitude))
+  ziploc_val_cur <- subset(validation_cur, select=c(latitude,longitude))
+  knn_rent_loc <- knn.reg(train=ziploc_train_cur,test=ziploc_val_cur,
+                          y=training_cur$homeprice_201501,k=4)
+  preds_cur <- knn_rent_loc$pred
+  rsq_cur <- rsq_val(preds_cur,validation_cur$homeprice_201501)
+  rsq_vals_homeprice[iter] <- rsq_cur
+}
 
-# select only lat/lon vars
-ziploc_only_training <- subset(training_data,select=c(latitude,longitude))
-ziploc_only_validation <- subset(validation_data,select=c(latitude,longitude))
-
-# obtain lat/lon knn validation predictions for homeprice
-knn_rent_loc <- knn.reg(train=ziploc_only_training,test=ziploc_only_validation,
-                        y=training_data$homeprice_201501,k=4)
-summary(knn_rent_loc$pred)
-rsq_val(knn_rent_loc$pred,validation_data$homeprice_201501)
+mean(rsq_vals_homeprice)
+boxplot(rsq_vals_homeprice)
 
 ###
 ### Test valchange imputation
@@ -102,21 +109,24 @@ usable_data <- usable_data[!is.na(usable_data$valuechange_5year),]
 
 dim(usable_data)
 
-# further split into current training, validation data sets
-nonhouldout_size <- nrow(usable_data)
-training_prop <- 0.8
-training_idx <- sample(nonhouldout_size,nonhouldout_size*training_prop)
-training_data <- usable_data[training_idx,]
-validation_data <- usable_data[-training_idx,]
+crossval_data <- shuffle(usable_data)
+# test params w/ cross-validaton
+k=5
+iters <- seq(1,k,by=1)
+rsq_vals_valchange <- rep(NA,k)
+for (iter in iters) {
+  training_cur <- select_training(crossval_data,k,iter)
+  validation_cur <- select_validation(crossval_data,k,iter)
+  ziploc_train_cur <- subset(training_cur, select=c(latitude,longitude))
+  ziploc_val_cur <- subset(validation_cur, select=c(latitude,longitude))
+  knn_rent_loc <- knn.reg(train=ziploc_train_cur,test=ziploc_val_cur,
+                          y=training_cur$valuechange_5year,k=4)
+  preds_cur <- knn_rent_loc$pred
+  rsq_cur <- rsq_val(preds_cur,validation_cur$valuechange_5year)
+  rsq_vals_valchange[iter] <- rsq_cur
+}
 
-# select only lat/lon vars
-ziploc_only_training <- subset(training_data,select=c(latitude,longitude))
-ziploc_only_validation <- subset(validation_data,select=c(latitude,longitude))
-
-# obtain lat/lon knn validation predictions for valuechange_5year
-knn_rent_loc <- knn.reg(train=ziploc_only_training,test=ziploc_only_validation,
-                        y=training_data$valuechange_5year,k=4)
-summary(knn_rent_loc$pred)
-rsq_val(knn_rent_loc$pred,validation_data$valuechange_5year)
+mean(rsq_vals_valchange)
+boxplot(rsq_vals_valchange)
 
 
