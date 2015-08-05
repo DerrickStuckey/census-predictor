@@ -45,4 +45,5 @@ for (iter in iters) {
   rsq_vals[iter] <- rsq_nnet
 }
 
+# rsq_vals: 0.6624942807 0.8577966273 0.9167171425 0.9352424589 0.9722477569
 plot(iters,rsq_vals)
