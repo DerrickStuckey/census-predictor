@@ -1,7 +1,5 @@
 ## exploratory analysis of education demographics w/ regression analysis
 library(MASS)
-library(rpart)
-library(randomForest)
 source("../utils/census_utils.R")
 source("../utils/crossval_utils.R")
 
@@ -39,7 +37,7 @@ rsq_vals_bach_log <- rep(NA,k)
 for (iter in iters) {
   training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
-  fit_cur <- lm(perc_bachelors_logodds ~ .-zipCode-state_code, data=training_cur)
+  fit_cur <- lm(perc_bachelors_logodds ~ .-perc_bachelors-zipCode-state_code, data=training_cur)
   preds_cur_transformed <- predict(fit_cur,newdata=validation_cur)
   preds_cur <- sapply(preds_cur_transformed,untransform_pct_log_odds)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_bachelors)
@@ -47,3 +45,30 @@ for (iter in iters) {
 }
 
 mean(rsq_vals_bach_log)
+
+##
+## Fit stepwise regression for percent bachelor's (log-odds)
+##
+
+bachlmfit <- lm(perc_bachelors_logodds ~ .-perc_bachelors-zipCode-state_code, data=Edu_Model_Data_Shuffled)
+bachstep <- stepAIC(bachlmfit, direction="both")
+summary(bachstep)
+stepformula_bach_logodds <- formula(terms(bachstep))
+
+# and test the model's performance w/ cross-validation
+k=5
+iters <- seq(1,k,by=1)
+rsq_vals_bach_step <- rep(NA,k)
+for (iter in iters) {
+  training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
+  validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
+  fit_cur <- lm(stepformula_bach_logodds, data=training_cur)
+  preds_cur_transformed <- predict(fit_cur,newdata=validation_cur)
+  preds_cur <- sapply(preds_cur_transformed,untransform_pct_log_odds)
+  rsq_cur <- rsq_val(preds_cur,validation_cur$perc_bachelors)
+  rsq_vals_bach_step[iter] <- rsq_cur
+}
+
+mean(rsq_vals_bach_step)
+boxplot(rsq_vals_bach_step,main="Crossval R-sq Pct Bachelors Stepwise")
+# r-sq of 0.4181306 observed
