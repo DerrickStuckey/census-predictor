@@ -1,6 +1,7 @@
 ## exploratory analysis of education demographics w/ regression analysis
 library(MASS)
 library(rpart)
+library(randomForest)
 source("../utils/census_utils.R")
 source("../utils/crossval_utils.R")
 
@@ -13,8 +14,7 @@ Practicum_Predictors_Normalized <- read.csv("../../prepared_data/Practicum_Predi
 Practicum_Targets <- read.csv("../../prepared_data/Practicum_Targets.csv", stringsAsFactors=FALSE)
 
 # remove data w/o education values
-Practicum_Targets <- Practicum_Targets[!is.na(Practicum_Targets$perc_bachelors) & 
-                                         !is.na(Practicum_Targets$perc_graddegree),]
+Practicum_Targets <- Practicum_Targets[!is.na(Practicum_Targets$perc_graddegree),]
 
 # carve out holdout data
 Model_Target_Data <- Practicum_Targets[Practicum_Targets$partition==1,]
@@ -66,7 +66,7 @@ for (iter in iters) {
 }
 
 mean(rsq_vals_grad_step)
-boxplot(rsq_vals_grad_step,main="Crossval R-sq Pct Bachelors Stepwise")
+boxplot(rsq_vals_grad_step,main="Crossval R-sq Pct Grad Deg Stepwise")
 
 ##
 ## Fit decision tree for percent grad degree
@@ -104,7 +104,6 @@ save(grad_tree_fit,file="saved_models/grad_deg_tree.rda")
 ##
 ## random forest model for pct grad degree (using whole training set)
 ##
-# library(randomForest)
 # grad_forest_fit <- randomForest(perc_graddegree ~ .-zipCode-state_code, data=Edu_Model_Data_Shuffled)
 # print(grad_forest_fit) # view results 
 # importance(grad_forest_fit) # importance of each predictor
@@ -151,6 +150,49 @@ boxplot(rsq_vals_grad_rf,main="Crossval R-sq Pct Graduate Deg RF")
 grad_rf_model <- randomForest(perc_graddegree ~ .-zipCode-state_code, data=Edu_Model_Data_Shuffled,
                             ntree=200,mtry=20,maxnodes=200)
 save(grad_rf_model,file="saved_models/grad_deg_rf.rda")
+
+##
+## Test log-odds transformed target stepwise regression
+##
+Edu_Model_Data_Shuffled$perc_graddegree_logodds <- sapply(Edu_Model_Data_Shuffled$perc_graddegree,
+                                                         transform_pct_log_odds)
+summary(Edu_Model_Data_Shuffled$perc_graddegree_logodds)
+
+# gradlmfit <- lm(perc_graddegree_logodds ~ .-perc_graddegree-zipCode-state_code, data=Edu_Model_Data_Shuffled)
+# gradstep <- stepAIC(gradlmfit, direction="both")
+# summary(gradstep)
+# stepformula_grad_logodds <- formula(terms(gradstep))
+stepformula_grad_logodds <- perc_graddegree_logodds ~ SS_recip + IRS_returns + rent_201501 + 
+  homeprice + valuechange_5year + com_elecrate + ind_elecrate + 
+  res_elecrate + beds + towers + care_centers + home_daycare + 
+  farmers_markets + walmart + cvs + home_depot + lowes + starbucks + 
+  fastfood_avg + towers_avg + care_centers_avg + home_daycare_avg + 
+  farmers_markets_avg + walmart_avg + target_avg + cvs_avg + 
+  whole_foods_avg + starbucks_avg + SS_recip_sum + IRS_returns_sum + 
+  SS_recip_avg + IRS_returns_avg + rent_avg + homeprice_avg + 
+  gas_stations_sum + fastfood_sum + towers_sum + home_daycare_sum + 
+  farmers_markets_sum + target_sum + cvs_sum + home_depot_sum + 
+  lowes_sum + starbucks_sum + IRS_imputed + rent_imputed + 
+  valchange_imputed + latitude + longitude + avgDependents + 
+  avgJointRtrns + avgChldTxCred + avgUnemp + avgFrmRtrns + 
+  avgTaxes
+
+# and test the model's performance w/ cross-validation
+k=5
+iters <- seq(1,k,by=1)
+rsq_vals_grad_step <- rep(NA,k)
+for (iter in iters) {
+  training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
+  validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
+  fit_cur <- lm(stepformula_grad_logodds, data=training_cur)
+  preds_cur_transformed <- predict(fit_cur,newdata=validation_cur)
+  preds_cur <- sapply(preds_cur_transformed,untransform_pct_log_odds)
+  rsq_cur <- rsq_val(preds_cur,validation_cur$perc_graddegree)
+  rsq_vals_grad_step[iter] <- rsq_cur
+}
+
+mean(rsq_vals_grad_step)
+boxplot(rsq_vals_grad_step,main="Crossval R-sq Pct Grad Deg Stepwise Log-odds")
 
 ##
 ## test on holdout data
