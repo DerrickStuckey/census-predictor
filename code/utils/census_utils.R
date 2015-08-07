@@ -23,3 +23,9 @@ untransform_pct_log_odds <- function(log_odds_x) {
   return(x)
 }
 
+## constrain a number to the interval [0,100]
+constrain_percent <- function(x) {
+  x <- min(x,100)
+  x <- max(0,x)
+}
+

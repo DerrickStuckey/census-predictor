@@ -129,20 +129,34 @@ boxplot(rsq_vals_nogovt,main="Crossval R-sq, no SS, IRS")
 ##
 ## test log-scaled pop model
 ##
-hist(Pop_Model_Data$pop_2010)
-Pop_Model_Data$log_pop_2010 <- log(Pop_Model_Data$pop_2010)
-hist(Pop_Model_Data$log_pop_2010)
-hist(Pop_Model_Data$IRS_returns)
+# hist(Pop_Model_Data$pop_2010)
+Pop_Model_Data$log_pop_2010 <- sapply(Pop_Model_Data$pop_2010, sm_log_transform)
+# hist(Pop_Model_Data$log_pop_2010)
+# hist(Pop_Model_Data$IRS_returns)
 Pop_Model_Data$log_IRS_returns <- log(Pop_Model_Data$IRS_returns - 
                                         min(Pop_Model_Data$IRS_returns) + 0.01)
-hist(Pop_Model_Data$log_IRS_returns)
+# hist(Pop_Model_Data$log_IRS_returns)
 Pop_Model_Data$log_SS_recip <- log(Pop_Model_Data$SS_recip - 
                                      min(Pop_Model_Data$SS_recip) + 0.01)
-hist(Pop_Model_Data$log_SS_recip)
+# hist(Pop_Model_Data$log_SS_recip)
 
 # reshuffle data (w/ same seed)
 set.seed(11235)
 Pop_Model_Data_Shuffled <- shuffle(Pop_Model_Data)
+
+# select stepwise model for log-pop
+logpop_lm <- lm(log_pop_2010 ~ .-pop_2010-zipCode-state_code, data=training_cur)
+logpop_step <- stepAIC(logpop_lm, direction="both")
+summary(logpop_step)
+stepformula_logpop <- formula(terms(logpop_step))
+stepformula_logpop <- log_pop_2010 ~ SS_recip + com_elecrate + res_elecrate + beds + 
+  towers + care_centers + farmers_markets + towers_avg + care_centers_avg + 
+  farmers_markets_avg + cvs_avg + lowes_avg + whole_foods_avg + 
+  SS_recip_sum + IRS_returns_sum + homeprice_sum + homeprice_avg + 
+  gas_stations_sum + care_centers_sum + farmers_markets_sum + 
+  lowes_sum + starbucks_sum + SS_imputed + IRS_imputed + rent_imputed + 
+  longitude + avgDependents + avgJointRtrns + avgChldTxCred + 
+  avgUnemp + avgFrmRtrns + avgTaxes + log_IRS_returns + log_SS_recip
 
 # test log-model cross-val performance
 k=5
@@ -151,9 +165,10 @@ rsq_vals_log <- rep(NA,k)
 for (iter in iters) {
   training_cur <- select_training(Pop_Model_Data_Shuffled,k,iter)
   validation_cur <- select_validation(Pop_Model_Data_Shuffled,k,iter)
-  pop_simple_cur <- lm(log_pop_2010 ~ log_SS_recip + log_IRS_returns, data=training_cur)
-  preds_cur <- predict(pop_simple_cur,newdata=validation_cur)
-  rsq_cur <- rsq_val(preds_cur,validation_cur$log_pop_2010)
+  pop_simple_cur <- lm(stepformula_logpop,data=training_cur)
+  preds_cur_xformed <- predict(pop_simple_cur,newdata=validation_cur)
+  preds_cur <- sapply(preds_cur_xformed,sm_log_untransform)
+  rsq_cur <- rsq_val(preds_cur,validation_cur$pop_2010)
   rsq_vals_log[iter] <- rsq_cur
 }
 
