@@ -28,22 +28,35 @@ training <- select_training(Pop_Model_Data_Shuffled,5,1)
 validation <- select_validation(Pop_Model_Data_Shuffled,5,1)
 
 # test validation prediction performance for various #'s of iterations
-k=5
-iters <- seq(1,k,by=1)
-iter_vals <- c(10,20,50,100,200)
-rsq_vals <- rep(NA,k)
-for (iter in iters) {
-  iter_val <- iter_vals[iter]
-  my.grid <- expand.grid(.decay = c(0.5, 0.1), .size = c(5, 6, 7))
-  nnet_fit <- train(pop_2010 ~ SS_recip + IRS_returns, data = training,
-                        method = "nnet", maxit = iter_val, tuneGrid = my.grid, trace = F, linout = 1)
-  
-  # get predictions and rsq
-  nnet_preds <- predict(nnet_fit, newdata=validation)
-  rsq_nnet <- rsq_val(nnet_preds,validation$pop_2010)
-  rsq_nnet
-  rsq_vals[iter] <- rsq_nnet
-}
+# k=5
+# iters <- seq(1,k,by=1)
+# iter_vals <- c(10,20,50,100,200)
+# rsq_vals <- rep(NA,k)
+# for (iter in iters) {
+#   iter_val <- iter_vals[iter]
+#   my.grid <- expand.grid(.decay = c(0), .size = c(10))
+#   nnet_fit <- train(pop_2010 ~ .-zipCode-state_code, data = training,
+#                         method = "nnet", maxit = iter_val, tuneGrid = my.grid, trace = F, linout = 1)
+#   
+#   # get predictions and rsq
+#   nnet_preds <- predict(nnet_fit, newdata=validation)
+#   rsq_nnet <- rsq_val(nnet_preds,validation$pop_2010)
+#   rsq_nnet
+#   rsq_vals[iter] <- rsq_nnet
+# }
+# 
+# # rsq_vals: 0.6624942807 0.8577966273 0.9167171425 0.9352424589 0.9722477569
+# plot(iters,rsq_vals)
 
-# rsq_vals: 0.6624942807 0.8577966273 0.9167171425 0.9352424589 0.9722477569
-plot(iters,rsq_vals)
+##
+## test on 20% validation data
+##
+my.grid <- expand.grid(.decay = c(0), .size = c(10))
+nnet_fit <- train(pop_2010 ~ .-zipCode-state_code, data = training,
+                  method = "nnet", maxit = 200, tuneGrid = my.grid, trace = F, linout = 1)
+
+# get predictions and rsq
+nnet_preds <- predict(nnet_fit, newdata=validation)
+rsq_nnet <- rsq_val(nnet_preds,validation$pop_2010)
+rsq_nnet
+# observed rsq: 0.7489971
