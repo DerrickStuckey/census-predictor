@@ -28,6 +28,24 @@ set.seed(11235)
 Model_Data_Shuffled <- shuffle(Model_Data)
 
 ##
+## Neural Net model
+##
+library(caret)
+training <- select_training(Model_Data_Shuffled,5,1)
+validation <- select_validation(Model_Data_Shuffled,5,1)
+
+#obtain best parameters
+my.grid <- expand.grid(.decay = c(0), .size = c(10))
+nnet_fit <- train(perc_asian ~ .-zipCode-state_code, data = training,
+                  method = "nnet", maxit = 100, tuneGrid = my.grid, trace = F, linout = 1)
+summary(nnet_fit)
+# get predictions and rsq
+nnet_preds <- predict(nnet_fit, newdata=validation)
+rsq_nnet <- rsq_val(nnet_preds,validation$perc_asian)
+rsq_nnet
+# observed rsq: 0.529508
+
+##
 ## Fit stepwise regression for percent asian
 ##
 

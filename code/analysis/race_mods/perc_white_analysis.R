@@ -2,6 +2,7 @@
 library(MASS)
 library(rpart)
 library(randomForest)
+library(caret)
 source("../utils/census_utils.R")
 source("../utils/crossval_utils.R")
 
@@ -96,6 +97,25 @@ boxplot(rsq_vals_white_tree,main="Crossval R-sq Pct White Tree")
 #                        control=rpart.control(cp=0.001,maxdepth=7))
 # white_tree_preds <- predict(white_tree_fit,newdata=Model_Data_Shuffled)
 # white_tree_rsq <- rsq_val(white_tree_preds,Model_Data_Shuffled$perc_white)
+
+##
+## Neural Net model
+##
+
+training <- select_training(Model_Data_Shuffled,5,1)
+validation <- select_validation(Model_Data_Shuffled,5,1)
+
+#obtain best parameters
+my.grid <- expand.grid(.decay = c(0), .size = c(10))
+nnet_fit <- train(perc_white ~ .-zipCode-state_code, data = training,
+                  method = "nnet", maxit = 100, tuneGrid = my.grid, trace = F, linout = 1)
+summary(nnet_fit)
+# get predictions and rsq
+nnet_preds <- predict(nnet_fit, newdata=validation)
+rsq_nnet <- rsq_val(nnet_preds,validation$perc_white)
+rsq_nnet
+# observed rsq: 0.5480474 for 50 iters
+# observed rsq: 0.5656072 for 100 iters
 
 ##
 ## random forest model for pct white
