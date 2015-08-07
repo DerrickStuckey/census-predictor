@@ -12,3 +12,6 @@ Children_Merged <- merge(Practicum_Targets, Children_Data,
                          all.x=TRUE,all.y=FALSE)
 
 # Children_Merged_NNA <- Children_Merged[!is.na(Children_Merged$percchildren),]
+
+write.csv(Children_Merged, file="../../prepared_data/Practicum_Targets.csv",
+          row.names=FALSE, quote=FALSE)
