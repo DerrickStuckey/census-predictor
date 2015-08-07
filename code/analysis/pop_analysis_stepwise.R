@@ -174,4 +174,4 @@ for (iter in iters) {
 
 mean(rsq_vals_log)
 boxplot(rsq_vals_log,main="Crossval R-sq, SS + IRS only")
-
+# observed rsq: 0.9805391

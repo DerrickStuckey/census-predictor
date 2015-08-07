@@ -29,3 +29,13 @@ constrain_percent <- function(x) {
   x <- max(0,x)
 }
 
+## smoothed log transform
+sm_log_transform <- function(x) {
+  return(log(x+0.01))
+}
+
+## smoothed log untransform
+sm_log_untransform <- function(y) {
+  return(exp(y)-0.01)
+}
+
