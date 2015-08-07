@@ -52,6 +52,7 @@ for (iter in iters) {
 
 mean(rsq_vals_black_step)
 boxplot(rsq_vals_black_step,main="Crossval R-sq Pct Black Stepwise")
+# observed rsq: 0.5593381
 
 ##
 ## Fit decision tree for percent black
@@ -75,6 +76,7 @@ for (iter in iters) {
 
 mean(rsq_vals_black_tree)
 boxplot(rsq_vals_black_tree,main="Crossval R-sq Pct Black Tree")
+# observed rsq: 0.7173255
 
 # Tree model w/ full training set
 # black_tree_fit <- rpart(perc_black ~ .-zipCode-state_code, 
@@ -104,9 +106,7 @@ for (iter in iters) {
 
 mean(rsq_vals_black_rf)
 boxplot(rsq_vals_black_rf,main="Crossval R-sq Pct Black RF")
-# observed rsq: 0.5694 w/ ntree=200,mtry=20,maxnodes=200
-# observed rsq: 0.5780 w/ ntree=200,mtry=20,maxnodes=300
-
+# observed rsq: 0.7852651
 
 # RF model w/ full training data
 black_forest_fit <- randomForest(perc_black ~ .-zipCode-state_code, data=Model_Data_Shuffled,
@@ -122,7 +122,16 @@ term_importance <- data.frame("var"=row.names(importance(black_forest_fit)),
 sorted_importance <- term_importance[order(term_importance$IncNodePurity,
                                            decreasing=TRUE),]
 sorted_importance[0:10,]
-
+# avgJointRtrns       avgJointRtrns     2032899.8
+# longitude               longitude      369966.6
+# latitude                 latitude      357926.0
+# towers_avg             towers_avg      265962.7
+# avgDependents       avgDependents      186091.9
+# homeprice               homeprice      157415.6
+# gas_stations_avg gas_stations_avg      130688.4
+# fastfood_avg         fastfood_avg      109374.5
+# care_centers_avg care_centers_avg      105647.1
+# beds_avg                 beds_avg       99513.3
 
 ##
 ## test on holdout data
@@ -139,7 +148,7 @@ test_predictions <- predict(black_forest_fit, Test_Data)
 
 test_rsq <- rsq_val(test_predictions,Test_Data$perc_black)
 test_rsq
-# observed test r-sq: 
+# observed test r-sq: 0.7828719
 
 
 

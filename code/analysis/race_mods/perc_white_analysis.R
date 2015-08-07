@@ -159,7 +159,7 @@ test_predictions <- predict(white_forest_fit, Test_Data)
 
 test_rsq <- rsq_val(test_predictions,Test_Data$perc_white)
 test_rsq
-# observed test r-sq: 
+# observed test r-sq: 0.7670891
 
 
 

@@ -52,6 +52,7 @@ for (iter in iters) {
 
 mean(rsq_vals_asian_step)
 boxplot(rsq_vals_asian_step,main="Crossval R-sq Pct Asian Stepwise")
+# observed rsq: 0.4089897
 
 ##
 ## Fit decision tree for percent asian
@@ -75,6 +76,7 @@ for (iter in iters) {
 
 mean(rsq_vals_asian_tree)
 boxplot(rsq_vals_asian_tree,main="Crossval R-sq Pct Asian Tree")
+# observed rsq: 0.4743499
 
 # Tree model w/ full training set
 # asian_tree_fit <- rpart(perc_asian ~ .-zipCode-state_code, 
@@ -115,6 +117,7 @@ print(asian_forest_fit) # view results
 importance(asian_forest_fit) # importance of each predictor
 #save the model
 save(asian_forest_fit,file="saved_models/asian_deg_rf.rda")
+# observed rsq: 0.612
 
 # order by importance
 term_importance <- data.frame("var"=row.names(importance(asian_forest_fit)),
@@ -122,7 +125,16 @@ term_importance <- data.frame("var"=row.names(importance(asian_forest_fit)),
 sorted_importance <- term_importance[order(term_importance$IncNodePurity,
                                            decreasing=TRUE),]
 sorted_importance[0:10,]
-
+# rent_avg               rent_avg      68416.19
+# homeprice_avg     homeprice_avg      44040.81
+# rent_201501         rent_201501      43689.31
+# longitude             longitude      30767.26
+# homeprice             homeprice      30207.48
+# latitude               latitude      26320.30
+# starbucks_avg     starbucks_avg      20261.97
+# IRS_returns         IRS_returns      18909.46
+# starbucks             starbucks      18631.78
+# IRS_returns_avg IRS_returns_avg      13758.26
 
 ##
 ## test on holdout data
@@ -139,7 +151,7 @@ test_predictions <- predict(asian_forest_fit, Test_Data)
 
 test_rsq <- rsq_val(test_predictions,Test_Data$perc_asian)
 test_rsq
-# observed test r-sq: 
+# observed test r-sq: 0.5508299
 
 
 
