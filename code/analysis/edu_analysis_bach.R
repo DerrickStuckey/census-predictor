@@ -135,9 +135,33 @@ term_importance <- data.frame("var"=row.names(importance(bach_forest_fit)),
                               importance(bach_forest_fit))
 sorted_importance <- term_importance[order(term_importance$IncNodePurity,
                                            decreasing=TRUE),]
-sorted_importance[0:5,]
+sorted_importance[0:10,]
+# avgTaxes           avgTaxes     263113.78
+# rent_201501     rent_201501     261755.78
+# homeprice         homeprice     190626.21
+# starbucks         starbucks      64759.71
+# avgChldTxCred avgChldTxCred      46260.63
+# avgDependents avgDependents      44137.18
+# homeprice_avg homeprice_avg      32654.86
+# avgUnemp           avgUnemp      31036.01
+# longitude         longitude      30113.18
+# rent_avg           rent_avg      29272.97
 
 ##
 ## test on holdout data
 ##
+
+# load bach_forest_fit
+load("saved_models/bach_deg_rf.rda")
+
+Edu_Test_Target_Data <- subset(Test_Target_Data, select=c(zipCode,perc_bachelors))
+Edu_Test_Data <- merge(Edu_Test_Target_Data,Practicum_Predictors_Normalized,by="zipCode",
+                       all.x=TRUE,all.y=FALSE)
+
+test_predictions <- predict(bach_forest_fit, Edu_Test_Data)
+
+test_rsq <- rsq_val(test_predictions,Edu_Test_Data$perc_bachelors)
+test_rsq
+# observed test r-sq: 0.5767788
+
 

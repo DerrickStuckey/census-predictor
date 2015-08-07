@@ -61,6 +61,7 @@ for (iter in iters) {
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
   fit_cur <- lm(stepformula_grad, data=training_cur)
   preds_cur <- predict(fit_cur,newdata=validation_cur)
+  preds_cur <- sapply(preds_cur, constrain_percent)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_graddegree)
   rsq_vals_grad_step[iter] <- rsq_cur
 }
@@ -137,7 +138,7 @@ for (iter in iters) {
   training_cur <- select_training(Edu_Model_Data_Shuffled,k,iter)
   validation_cur <- select_validation(Edu_Model_Data_Shuffled,k,iter)
   grad_rf_cur <- randomForest(perc_graddegree ~ .-zipCode-state_code, data=training_cur,
-                              ntree=200,mtry=20,maxnodes=200)
+                              ntree=200,mtry=20,maxnodes=300)
   preds_cur <- predict(grad_rf_cur,newdata=validation_cur)
   rsq_cur <- rsq_val(preds_cur,validation_cur$perc_graddegree)
   rsq_vals_grad_rf[iter] <- rsq_cur
@@ -148,8 +149,25 @@ boxplot(rsq_vals_grad_rf,main="Crossval R-sq Pct Graduate Deg RF")
 
 ## construct and save RF model w/ these settings on full training set
 grad_rf_model <- randomForest(perc_graddegree ~ .-zipCode-state_code, data=Edu_Model_Data_Shuffled,
-                            ntree=200,mtry=20,maxnodes=200)
+                            ntree=200,mtry=20,maxnodes=300)
 save(grad_rf_model,file="saved_models/grad_deg_rf.rda")
+
+# order by importance
+term_importance <- data.frame("var"=row.names(importance(grad_rf_model)),
+                              importance(grad_rf_model))
+sorted_importance <- term_importance[order(term_importance$IncNodePurity,
+                                           decreasing=TRUE),]
+sorted_importance[0:10,]
+# rent_201501     rent_201501     206910.42
+# homeprice         homeprice     167854.75
+# avgTaxes           avgTaxes     159753.65
+# avgChldTxCred avgChldTxCred     114792.03
+# rent_avg           rent_avg      41841.40
+# avgDependents avgDependents      34373.71
+# homeprice_avg homeprice_avg      29020.37
+# avgUnemp           avgUnemp      28890.05
+# starbucks         starbucks      25767.04
+# longitude         longitude      23216.53
 
 ##
 ## Test log-odds transformed target stepwise regression
@@ -197,5 +215,18 @@ boxplot(rsq_vals_grad_step,main="Crossval R-sq Pct Grad Deg Stepwise Log-odds")
 ##
 ## test on holdout data
 ##
+
+# load grad_rf_model
+load("saved_models/grad_deg_rf.rda")
+
+Edu_Test_Target_Data <- subset(Test_Target_Data, select=c(zipCode,perc_graddegree))
+Edu_Test_Data <- merge(Edu_Test_Target_Data,Practicum_Predictors_Normalized,by="zipCode",
+                        all.x=TRUE,all.y=FALSE)
+
+test_predictions <- predict(grad_rf_model, Edu_Test_Data)
+
+test_rsq <- rsq_val(test_predictions,Edu_Test_Data$perc_graddegree)
+test_rsq
+# observed test r-sq: 0.6117006
 
 

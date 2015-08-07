@@ -126,3 +126,20 @@ sorted_importance <- term_importance[order(term_importance$IncNodePurity,
                                            decreasing=TRUE),]
 sorted_importance[0:10,]
 
+##
+## Test best model on holdout sample
+##
+
+# load child_forest_fit
+load("saved_models/child_rf.rda")
+
+Test_Target_Data <- subset(Test_Target_Data, select=c(zipCode,percchildren))
+Test_Data <- merge(Test_Target_Data,Practicum_Predictors_Normalized,by="zipCode",
+                       all.x=TRUE,all.y=FALSE)
+
+test_predictions <- predict(child_forest_fit, Test_Data)
+
+test_rsq <- rsq_val(test_predictions,Test_Data$percchildren)
+test_rsq
+# observed test r-sq: 0.3707321
+
