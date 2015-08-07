@@ -120,8 +120,8 @@ importance(child_forest_fit) # importance of each predictor
 save(child_forest_fit,file="saved_models/child_rf.rda")
 
 # order terms by importance
-term_importance <- data.frame("var"=row.names(importance(child_rf_model)),
-                              importance(child_rf_model))
+term_importance <- data.frame("var"=row.names(importance(child_forest_fit)),
+                              importance(child_forest_fit))
 sorted_importance <- term_importance[order(term_importance$IncNodePurity,
                                            decreasing=TRUE),]
 sorted_importance[0:10,]
