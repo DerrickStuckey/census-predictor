@@ -83,3 +83,16 @@ print(rsq_full)
 # (Intercept) -41.119169  12.070489  -3.407 0.000659 ***
 # rf_preds      0.623465   0.006027 103.447  < 2e-16 ***
 # lm_preds      0.382454   0.005831  65.591  < 2e-16 ***
+
+# print predictions
+preds_df <- data.frame("predicted_pop"=combined_preds_full,
+                       "actual_pop"=Test_Data$pop_2010,
+                       "zipCode"=Test_Data$zipCode,
+                       "state_code"=Test_Data$state_code)
+
+preds_df$residual <- preds_df$actual_pop - preds_df$predicted_pop
+
+write.csv(preds_df, file="../../results/population_final_predictions.csv",
+          row.names=FALSE,quote=FALSE)
+
+
