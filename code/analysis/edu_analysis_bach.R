@@ -164,4 +164,14 @@ test_rsq <- rsq_val(test_predictions,Edu_Test_Data$perc_bachelors)
 test_rsq
 # observed test r-sq: 0.5767788
 
+# save predictions
+preds_df <- data.frame("predicted_pct_bachelors"=test_predictions,
+                       "actual_pct_bachelors"=Edu_Test_Data$perc_bachelors,
+                       "zipCode"=Edu_Test_Data$zipCode,
+                       "state_code"=Edu_Test_Data$state_code)
+
+preds_df$residual <- preds_df$actual_pct_bachelors - preds_df$predicted_pct_bachelors
+
+write.csv(preds_df, file="../../results/bachelors_final_predictions.csv",
+          row.names=FALSE,quote=FALSE)
 
